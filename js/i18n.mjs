@@ -33,6 +33,10 @@ export const TRANSLATIONS = {
     dropSub: 'MP4 · WebM · MOV · GIF · PNG · JPG (서버 업로드 없이 브라우저에서 즉시 변환)',
 
     secSource: '입력 소스',
+    tabStyle: '스타일',
+    tabTune: '보정',
+    tabExport: '내보내기',
+    tabDemo: '소스',
     sourceDemo: '내장 데모',
     demoPlasma: '네온 플라즈마',
     demoTorus: '3D 회전 토러스',
@@ -131,6 +135,10 @@ export const TRANSLATIONS = {
     dropSub: 'MP4 · WebM · MOV · GIF · PNG · JPG (100% local in-browser conversion)',
 
     secSource: 'INPUT SOURCE',
+    tabStyle: 'Style',
+    tabTune: 'Tune',
+    tabExport: 'Export',
+    tabDemo: 'Source',
     sourceDemo: 'Built-in Demo',
     demoPlasma: 'Neon Plasma',
     demoTorus: '3D Torus Knot',

@@ -18,6 +18,12 @@ const recorder = new AsciiVideoRecorder(canvas, video);
 
 const SPEED_STEPS = [0.5, 1, 1.5, 2];
 
+function getDefaultCols() {
+  return window.innerWidth <= 768 ? 72 : 120;
+}
+
+const initialCols = getDefaultCols();
+
 const state = {
   lang: detectInitialLanguage(),
   sourceType: 'demo', // 'demo' | 'video' | 'gif' | 'image' | 'webcam'
@@ -39,7 +45,7 @@ const state = {
   settings: {
     charset: 'classic',
     colorMode: 'truecolor',
-    cols: 120,
+    cols: initialCols,
     contrast: 1.15,
     brightness: 0,
     saturation: 1.25,
@@ -883,8 +889,9 @@ document.getElementById('chk-glow').addEventListener('change', (e) => {
 });
 
 document.getElementById('btn-reset-tune').addEventListener('click', () => {
+  const defaultCols = getDefaultCols();
   Object.assign(state.settings, {
-    cols: 120,
+    cols: defaultCols,
     contrast: 1.15,
     brightness: 0,
     saturation: 1.25,
@@ -892,8 +899,8 @@ document.getElementById('btn-reset-tune').addEventListener('click', () => {
     scanlines: false,
     glow: true,
   });
-  document.getElementById('rng-cols').value = 120;
-  document.getElementById('val-cols').textContent = '120';
+  document.getElementById('rng-cols').value = defaultCols;
+  document.getElementById('val-cols').textContent = String(defaultCols);
   document.getElementById('rng-contrast').value = 1.15;
   document.getElementById('val-contrast').textContent = '1.15';
   document.getElementById('rng-brightness').value = 0;
@@ -903,6 +910,22 @@ document.getElementById('btn-reset-tune').addEventListener('click', () => {
   document.getElementById('chk-invert').checked = false;
   document.getElementById('chk-scanlines').checked = false;
   document.getElementById('chk-glow').checked = true;
+});
+
+// Mobile Control Tabs
+function setMobileTab(tab) {
+  document.querySelectorAll('#mobile-tabs .mobile-tab').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.tab === tab);
+  });
+  document.querySelectorAll('#control-sidebar .ctrl-section').forEach((sec) => {
+    sec.classList.toggle('mobile-tab-visible', sec.dataset.mobileTab === tab);
+  });
+  const body = document.querySelector('#control-sidebar .sidebar-body');
+  if (body) body.scrollTop = 0;
+}
+
+document.querySelectorAll('#mobile-tabs .mobile-tab').forEach((btn) => {
+  btn.addEventListener('click', () => setMobileTab(btn.dataset.tab));
 });
 
 // Playback controls
@@ -1104,7 +1127,16 @@ function tick(nowMs) {
 }
 
 // --- Bootstrap ---
+document.getElementById('rng-cols').value = initialCols;
+document.getElementById('val-cols').textContent = String(initialCols);
+setMobileTab('style');
+
 window.addEventListener('resize', () => engine.resizeToStage());
+window.addEventListener('orientationchange', () => setTimeout(() => engine.resizeToStage(), 120));
+if (typeof ResizeObserver === 'function' && elStageFrame) {
+  const stageObserver = new ResizeObserver(() => engine.resizeToStage());
+  stageObserver.observe(elStageFrame);
+}
 engine.resizeToStage();
 applyLanguage(state.lang, false);
 updateSplitUI();

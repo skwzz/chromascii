@@ -29,8 +29,8 @@ export class ColorAsciiEngine {
     const parent = this.canvas.parentElement;
     if (!parent) return;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const w = Math.max(320, Math.floor(parent.clientWidth));
-    const h = Math.max(240, Math.floor(parent.clientHeight));
+    const w = Math.max(160, Math.floor(parent.clientWidth));
+    const h = Math.max(140, Math.floor(parent.clientHeight));
     if (this.canvas.width !== Math.round(w * dpr) || this.canvas.height !== Math.round(h * dpr)) {
       this.canvas.width = Math.round(w * dpr);
       this.canvas.height = Math.round(h * dpr);
