@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>CHROMASCII — 실시간 컬러 비디오 아스키 아트 스튜디오</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <!-- Hidden File Input & Source Video -->
+  <input type="file" id="file-input" accept="video/*,image/*" hidden />
+  <video id="source-video" playsinline crossorigin="anonymous" hidden></video>
+
+  <!-- Global Drag & Drop Overlay -->
+  <div class="drop-overlay hidden" id="drop-overlay">
+    <div class="drop-box glass">
+      <div class="drop-icon">⬇</div>
+      <h2 data-i18n="dropTitle">영상 또는 이미지 파일을 여기에 드롭하세요</h2>
+      <p data-i18n="dropSub">MP4 · WebM · MOV · PNG · JPG (서버 업로드 없이 브라우저에서 즉시 변환)</p>
+    </div>
+  </div>
+
+  <div class="studio-shell">
+    <!-- Top Header -->
+    <header class="topbar glass">
+      <div class="brand">
+        <div class="brand-glyph" aria-hidden="true">#@</div>
+        <div class="brand-meta">
+          <span class="brand-title">CHROMASCII</span>
+          <span class="brand-sub" data-i18n="brandSub">실시간 컬러 비디오 → 아스키 스튜디오</span>
+        </div>
+      </div>
+
+      <div class="topbar-stats">
+        <div class="stat-chip"><span data-i18n="statFps">FPS</span><strong id="stat-fps">60</strong></div>
+        <div class="stat-chip"><span data-i18n="statGrid">문자 격자</span><strong id="stat-grid">120×48</strong></div>
+        <div class="stat-chip"><span data-i18n="statMode">소스</span><strong id="stat-mode">데모</strong></div>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="btn primary" id="btn-upload">
+          <span>↑</span>
+          <span data-i18n="btnUpload">영상 열기</span>
+        </button>
+        <button class="btn" id="btn-webcam">
+          <span>◉</span>
+          <span data-i18n="btnWebcam">웹캠</span>
+        </button>
+        <button class="btn" id="btn-split" title="Shortcut: S">
+          <span>◧</span>
+          <span class="btn-text" data-i18n="btnSplit">원본 비교</span>
+        </button>
+        <button class="btn lang-btn" id="btn-lang" title="한국어 / English (L)">
+          <span id="lang-ko" class="active">한</span><span>/</span><span id="lang-en">EN</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Studio Workspace -->
+    <main class="workspace">
+      <!-- Viewport Stage -->
+      <section class="stage-column">
+        <div class="stage-frame glass" id="stage-frame">
+          <canvas id="ascii-canvas"></canvas>
+
+          <!-- Recording Indicator -->
+          <div class="rec-badge hidden" id="rec-badge">
+            <span class="rec-dot"></span>
+            <span id="rec-label">REC 00:00</span>
+          </div>
+
+          <!-- Split-Screen Labels & Draggable Handle -->
+          <div class="split-tag split-left hidden" id="split-tag-left" data-i18n="splitOrig">원본</div>
+          <div class="split-tag split-right hidden" id="split-tag-right" data-i18n="splitAscii">컬러 아스키</div>
+          <div class="split-handle hidden" id="split-handle">
+            <div class="split-knob">⇆</div>
+          </div>
+        </div>
+
+        <!-- Playback & Render Progress Deck -->
+        <div class="player-bar glass" id="player-bar">
+          <button class="play-btn" id="btn-play" title="Play / Pause (Space)">❚❚</button>
+          <span class="time-code" id="time-current">00:00</span>
+          <input type="range" class="timeline-slider" id="timeline-slider" min="0" max="1000" value="0" disabled />
+          <span class="time-code" id="time-total">LIVE</span>
+
+          <div class="player-right">
+            <button class="mini-pill" id="btn-speed" title="Playback Speed">1×</button>
+            <button class="mini-pill" id="btn-mute" title="Mute / Unmute">🔊</button>
+            <span class="file-label" id="file-label">Neon Plasma</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Control Sidebar -->
+      <aside class="sidebar glass">
+        <!-- Input Source / Demo Switcher -->
+        <section class="ctrl-section">
+          <div class="sec-head">
+            <h3 data-i18n="secSource">입력 소스</h3>
+            <button class="link-btn" id="btn-back-demo" data-i18n="btnDemo">데모 영상</button>
+          </div>
+          <div class="pill-grid cols-3" id="demo-grid">
+            <button class="opt-pill active" data-demo="plasma" data-i18n="demoPlasma">네온 플라즈마</button>
+            <button class="opt-pill" data-demo="torus" data-i18n="demoTorus">3D 회전 토러스</button>
+            <button class="opt-pill" data-demo="tunnel" data-i18n="demoTunnel">사이버 터널</button>
+          </div>
+        </section>
+
+        <!-- Character Ramp Presets -->
+        <section class="ctrl-section">
+          <div class="sec-head">
+            <h3 data-i18n="secCharset">문자셋 프리셋</h3>
+          </div>
+          <div class="pill-grid cols-3" id="charset-grid">
+            <button class="opt-pill active" data-charset="classic" data-i18n="cs_classic">클래식</button>
+            <button class="opt-pill" data-charset="dense" data-i18n="cs_dense">초정밀 70</button>
+            <button class="opt-pill" data-charset="blocks" data-i18n="cs_blocks">블록 픽셀</button>
+            <button class="opt-pill" data-charset="dots" data-i18n="cs_dots">도트 원형</button>
+            <button class="opt-pill" data-charset="matrix" data-i18n="cs_matrix">매트릭스</button>
+            <button class="opt-pill" data-charset="minimal" data-i18n="cs_minimal">미니멀</button>
+          </div>
+        </section>
+
+        <!-- Color Modes -->
+        <section class="ctrl-section">
+          <div class="sec-head">
+            <h3 data-i18n="secColor">컬러 스타일</h3>
+          </div>
+          <div class="pill-grid cols-2" id="colormode-grid">
+            <button class="opt-pill active" data-color="truecolor">
+              <span class="dot-swatch rainbow"></span><span data-i18n="cm_truecolor">트루컬러 RGB</span>
+            </button>
+            <button class="opt-pill" data-color="bgfill">
+              <span class="dot-swatch cell"></span><span data-i18n="cm_bgfill">고대비 컬러셀</span>
+            </button>
+            <button class="opt-pill" data-color="matrix">
+              <span class="dot-swatch" style="--c:#22c55e"></span><span data-i18n="cm_matrix">매트릭스 그린</span>
+            </button>
+            <button class="opt-pill" data-color="amber">
+              <span class="dot-swatch" style="--c:#f59e0b"></span><span data-i18n="cm_amber">레트로 앰버</span>
+            </button>
+            <button class="opt-pill" data-color="cyber">
+              <span class="dot-swatch cyber"></span><span data-i18n="cm_cyber">사이버펑크</span>
+            </button>
+            <button class="opt-pill" data-color="mono">
+              <span class="dot-swatch" style="--c:#e2e8f0"></span><span data-i18n="cm_mono">모노크롬</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Image Tuning Sliders -->
+        <section class="ctrl-section">
+          <div class="sec-head">
+            <h3 data-i18n="secTuning">화질 & 톤 보정</h3>
+            <button class="link-btn" id="btn-reset-tune" data-i18n="btnResetTune">보정 초기화</button>
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-head">
+              <span data-i18n="lblCols">가로 해상도 (문자 수)</span>
+              <output id="val-cols">120</output>
+            </div>
+            <input type="range" id="rng-cols" min="48" max="220" step="2" value="120" />
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-head">
+              <span data-i18n="lblContrast">대비</span>
+              <output id="val-contrast">1.15</output>
+            </div>
+            <input type="range" id="rng-contrast" min="0.5" max="2.2" step="0.05" value="1.15" />
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-head">
+              <span data-i18n="lblBrightness">밝기</span>
+              <output id="val-brightness">0</output>
+            </div>
+            <input type="range" id="rng-brightness" min="-60" max="60" step="2" value="0" />
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-head">
+              <span data-i18n="lblSaturation">채도</span>
+              <output id="val-saturation">1.25</output>
+            </div>
+            <input type="range" id="rng-saturation" min="0" max="2.4" step="0.05" value="1.25" />
+          </div>
+
+          <div class="switch-row">
+            <label class="toggle-item"><input type="checkbox" id="chk-invert" /><span data-i18n="lblInvert">명암 반전</span></label>
+            <label class="toggle-item"><input type="checkbox" id="chk-scanlines" /><span data-i18n="lblScanlines">CRT 스캔라인</span></label>
+            <label class="toggle-item"><input type="checkbox" id="chk-glow" checked /><span data-i18n="lblGlow">네온 글로우</span></label>
+          </div>
+        </section>
+
+        <!-- Export Studio -->
+        <section class="ctrl-section">
+          <div class="sec-head">
+            <h3 data-i18n="secExport">결과물 내보내기</h3>
+          </div>
+          <p class="export-hint" data-i18n="exportHint">원본 오디오를 포함해 WebM 동영상으로 브라우저에서 직접 인코딩합니다.</p>
+
+          <div class="export-primary-grid">
+            <button class="btn rec-btn" id="btn-record">
+              <span>●</span>
+              <span id="lbl-record" data-i18n="btnRecord">녹화 시작</span>
+            </button>
+            <button class="btn accent" id="btn-full-export">
+              <span>▶</span>
+              <span id="lbl-full-export" data-i18n="btnFullExport">전체 영상 변환</span>
+            </button>
+          </div>
+
+          <div class="export-secondary-grid">
+            <button class="btn subtle" id="btn-png" data-i18n="btnPng">PNG 저장</button>
+            <button class="btn subtle" id="btn-copy-txt" data-i18n="btnCopyTxt">텍스트 복사</button>
+            <button class="btn subtle" id="btn-html" data-i18n="btnHtml">컬러 HTML</button>
+          </div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Toast Stack -->
+  <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+
+  <script type="module" src="./js/app.mjs"></script>
+</body>
+</html>
