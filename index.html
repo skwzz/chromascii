@@ -19,7 +19,25 @@
     <div class="drop-box glass">
       <div class="drop-icon">⬇</div>
       <h2 data-i18n="dropTitle">영상 또는 이미지 파일을 여기에 드롭하세요</h2>
-      <p data-i18n="dropSub">MP4 · WebM · MOV · PNG · JPG (서버 업로드 없이 브라우저에서 즉시 변환)</p>
+      <p data-i18n="dropSub">MP4 · WebM · MOV · GIF · PNG · JPG (서버 업로드 없이 브라우저에서 즉시 변환)</p>
+    </div>
+  </div>
+
+  <!-- Full Video Export Loading Overlay -->
+  <div class="export-overlay hidden" id="export-overlay" role="dialog" aria-modal="true" aria-labelledby="export-modal-title">
+    <div class="export-modal glass">
+      <div class="export-spinner" aria-hidden="true"></div>
+      <h2 id="export-modal-title" data-i18n="exportModalTitle">컬러 아스키 영상 변환 중...</h2>
+      <p class="export-modal-sub" id="export-modal-sub" data-i18n="exportModalSub">원본 비교를 제외하고 순수 컬러 아스키로 WebM 영상을 인코딩하고 있습니다.</p>
+      <div class="export-progress-meta">
+        <span id="export-modal-file">video.mp4</span>
+        <strong id="export-modal-pct">0%</strong>
+      </div>
+      <div class="export-progress-track">
+        <div class="export-progress-fill" id="export-progress-fill"></div>
+      </div>
+      <div class="export-modal-time" id="export-modal-time">00:00 / 00:00</div>
+      <button class="btn rec-btn export-cancel-btn" id="btn-export-cancel" data-i18n="btnCancelExport">변환 중지</button>
     </div>
   </div>
 
@@ -44,10 +62,6 @@
         <button class="btn primary" id="btn-upload">
           <span>↑</span>
           <span data-i18n="btnUpload">영상 열기</span>
-        </button>
-        <button class="btn" id="btn-webcam">
-          <span>◉</span>
-          <span data-i18n="btnWebcam">웹캠</span>
         </button>
         <button class="btn" id="btn-split" title="Shortcut: S">
           <span>◧</span>
@@ -203,7 +217,11 @@
           <div class="sec-head">
             <h3 data-i18n="secExport">결과물 내보내기</h3>
           </div>
-          <p class="export-hint" data-i18n="exportHint">원본 오디오를 포함해 WebM 동영상으로 브라우저에서 직접 인코딩합니다.</p>
+          <p class="export-hint" data-i18n="exportHint">브라우저에서 직접 컬러 아스키 WebM 동영상으로 인코딩합니다.</p>
+          <label class="toggle-item export-audio-toggle">
+            <input type="checkbox" id="chk-export-audio" />
+            <span data-i18n="lblExportAudio">원본 오디오 포함</span>
+          </label>
 
           <div class="export-primary-grid">
             <button class="btn rec-btn" id="btn-record">

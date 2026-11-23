@@ -48,7 +48,10 @@ export class ColorAsciiEngine {
     if (source instanceof HTMLImageElement) {
       return { w: source.naturalWidth || 640, h: source.naturalHeight || 360 };
     }
-    return { w: source.width || 640, h: source.height || 360 };
+    return {
+      w: source.displayWidth || source.width || 640,
+      h: source.displayHeight || source.height || 360,
+    };
   }
 
   computeColor(r, g, b, luma, colorMode) {
@@ -140,6 +143,10 @@ export class ColorAsciiEngine {
       this.sampleCanvas.height = rows;
     }
 
+    // Clear sample buffer to obsidian black so transparent GIF/PNG frames do not ghost
+    this.sampleCtx.fillStyle = '#020308';
+    this.sampleCtx.fillRect(0, 0, cols, rows);
+
     // Downsample source video/canvas/image to exact ASCII grid
     this.sampleCtx.drawImage(source, 0, 0, cols, rows);
     const imgData = this.sampleCtx.getImageData(0, 0, cols, rows).data;
@@ -153,7 +160,8 @@ export class ColorAsciiEngine {
     const colorMode = settings.colorMode || 'truecolor';
 
     const splitActive = Boolean(settings.splitEnabled);
-    const splitX = offsetX + drawW * (settings.splitRatio ?? 0.5);
+    const rawSplitX = stageW * (settings.splitRatio ?? 0.5);
+    const splitX = Math.max(offsetX, Math.min(offsetX + drawW, rawSplitX));
 
     // 1. If Split-Screen active, draw original media on left side
     if (splitActive) {

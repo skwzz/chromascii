@@ -38,6 +38,7 @@ export class AsciiVideoRecorder {
     this.recorder = null;
     this.chunks = [];
     this.isRecording = false;
+    this._discardOnStop = false;
     this.startedAt = 0;
     this.audioCtx = null;
     this.mediaSource = null;
@@ -88,17 +89,25 @@ export class AsciiVideoRecorder {
       : { videoBitsPerSecond: 6_000_000 };
 
     this.chunks = [];
+    this._discardOnStop = false;
     this.recorder = new MediaRecorder(combinedStream, options);
     this.recorder.ondataavailable = (ev) => {
       if (ev.data && ev.data.size > 0) this.chunks.push(ev.data);
     };
     this.recorder.onstop = () => {
-      const blob = new Blob(this.chunks, { type: mimeType || 'video/webm' });
-      const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-      triggerDownload(blob, `${filenamePrefix}-${ts}.webm`);
+      const discarded = this._discardOnStop;
+      this._discardOnStop = false;
+      canvasStream.getVideoTracks().forEach((track) => track.stop());
+
+      let blob = null;
+      if (!discarded) {
+        blob = new Blob(this.chunks, { type: mimeType || 'video/webm' });
+        const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        triggerDownload(blob, `${filenamePrefix}-${ts}.webm`);
+      }
       this.chunks = [];
       this.isRecording = false;
-      if (typeof onStop === 'function') onStop(blob);
+      if (typeof onStop === 'function') onStop(blob, { discarded });
     };
 
     this.recorder.start(250);
@@ -107,8 +116,9 @@ export class AsciiVideoRecorder {
     return true;
   }
 
-  stop() {
+  stop({ discard = false } = {}) {
     if (!this.isRecording || !this.recorder) return;
+    this._discardOnStop = Boolean(discard);
     if (this.recorder.state !== 'inactive') {
       this.recorder.stop();
     }
